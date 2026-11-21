@@ -27,6 +27,8 @@ class PosRedemptionTest extends TestCase
         $reserve=['external_key'=>$key,'outlet_id'=>$outlet,'member_id'=>$member,'subtotal'=>20000,'discount'=>0,'eligible_subtotal'=>20000,'points'=>10,'operator_role'=>'cashier','items'=>$items];
 
         $this->withHeaders($headers)->postJson('/api/v1/pos/redemptions',$reserve)->assertOk()->assertJsonPath('redeem_rupiah',1000)->assertJsonPath('total',19000);
+        $this->postJson('/api/v1/pos/reconciliation',['sale_ids'=>['42'],'reservation_keys'=>[$key]])
+            ->assertOk()->assertJsonPath('reservations.'.$key.'.status','reserved');
         $this->postJson('/api/v1/pos/redemptions',$reserve)->assertOk();
         $this->assertSame(10,DB::table('members')->where('id',$member)->value('point_balance'));
         $this->assertSame(10,DB::table('point_lots')->where('id',$lot)->value('remaining_points'));
@@ -35,6 +37,8 @@ class PosRedemptionTest extends TestCase
 
         $sale=['external_sale_id'=>'42','idempotency_key'=>$key,'reservation_key'=>$key,'outlet_id'=>$outlet,'member_id'=>$member,'subtotal'=>20000,'discount'=>0,'redeem_points'=>10,'redeem_rupiah'=>1000,'total'=>19000,'payment_method'=>'cash','items'=>$items];
         $this->postJson('/api/v1/pos/sales',$sale)->assertOk()->assertJsonPath('earned_points',1);
+        $this->postJson('/api/v1/pos/reconciliation',['sale_ids'=>['42'],'reservation_keys'=>[$key]])
+            ->assertJsonPath('sales.42.redeem_points',10)->assertJsonPath('reservations.'.$key.'.status','confirmed');
         $this->postJson('/api/v1/pos/sales',$sale)->assertOk();
         $this->assertDatabaseCount('transactions',1);
         $this->assertSame(11,DB::table('members')->where('id',$member)->value('point_balance'));
@@ -46,6 +50,8 @@ class PosRedemptionTest extends TestCase
         $second=(string)Str::uuid();
         $this->postJson('/api/v1/pos/redemptions',[...$reserve,'external_key'=>$second])->assertOk();
         $this->postJson('/api/v1/pos/redemptions/'.$second.'/release')->assertOk();
+        $this->postJson('/api/v1/pos/reconciliation',['sale_ids'=>['42'],'reservation_keys'=>[$second]])
+            ->assertJsonPath('reservations.'.$second.'.status','released');
         $this->postJson('/api/v1/pos/redemptions/'.$second.'/release')->assertOk();
         $this->assertSame(20,DB::table('members')->where('id',$member)->value('point_balance'));
     }

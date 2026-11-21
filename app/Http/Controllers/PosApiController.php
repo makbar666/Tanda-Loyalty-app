@@ -22,6 +22,25 @@ class PosApiController extends Controller
         return $connection;
     }
     public function connection(Request $r) { $c=$this->connectionFor($r); return response()->json(['business_id'=>$c->business_id,'business_name'=>DB::table('businesses')->where('id',$c->business_id)->value('name'),'outlets'=>DB::table('outlets')->where('business_id',$c->business_id)->select('id','name','code')->get()]); }
+    public function reconcile(Request $r)
+    {
+        $c=$this->connectionFor($r);
+        $data=$r->validate(['sale_ids'=>'required|array|min:1|max:100','sale_ids.*'=>'required|string|max:100|distinct',
+            'reservation_keys'=>'sometimes|array|max:100','reservation_keys.*'=>'required|uuid|distinct']);
+        $links=DB::table('pos_sale_links as l')->join('transactions as t','t.id','=','l.transaction_id')
+            ->where('l.pos_connection_id',$c->id)->where('t.business_id',$c->business_id)
+            ->whereIn('l.external_sale_id',$data['sale_ids'])
+            ->select('l.external_sale_id','t.id as transaction_id','t.status','t.member_id','t.outlet_id','t.total','t.earned_points','t.redeem_points','t.redeem_rupiah')
+            ->get()->keyBy('external_sale_id');
+        $reservations=DB::table('pos_point_reservations')->where('pos_connection_id',$c->id)
+            ->where('business_id',$c->business_id)->whereIn('external_key',$data['reservation_keys']??[])
+            ->select('external_key','status','member_id','outlet_id','points','rupiah','transaction_id')->get()->keyBy('external_key');
+        return response()->json([
+            'business_id'=>$c->business_id,
+            'sales'=>collect($data['sale_ids'])->mapWithKeys(fn($id)=>[$id=>$links->get($id)])->all(),
+            'reservations'=>collect($data['reservation_keys']??[])->mapWithKeys(fn($key)=>[$key=>$reservations->get($key)])->all(),
+        ]);
+    }
     public function member(Request $r) { $c=$this->connectionFor($r); $data=$r->validate(['q'=>'required|string|min:3|max:50']); $q=trim($data['q']); $digits=preg_replace('/\D+/','',$q); if(Str::startsWith($digits,'0'))$digits='62'.substr($digits,1); $members=DB::table('members')->where('business_id',$c->business_id)->where(function($query)use($q,$digits){$query->where('name','like','%'.$q.'%')->orWhere('code','like','%'.$q.'%');if(strlen($digits)>=3)$query->orWhere('phone','like','%'.$digits.'%');})->select('id','name','code','phone','point_balance')->orderBy('name')->limit(10)->get(); return response()->json(['members'=>$members,'redemption'=>$this->redemptions->options($c->business_id)]); }
     public function reserve(Request $r)
     {

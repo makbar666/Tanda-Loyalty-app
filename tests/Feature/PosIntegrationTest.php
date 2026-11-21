@@ -27,8 +27,19 @@ class PosIntegrationTest extends TestCase
         $this->withHeaders($headers)->postJson('/api/v1/pos/sales',$payload)->assertOk()->assertJsonPath('earned_points',2);
         $this->withHeaders($headers)->postJson('/api/v1/pos/sales',$payload)->assertOk();
         $this->assertDatabaseCount('pos_sale_links',1);$this->assertSame(2,DB::table('members')->where('id',$member)->value('point_balance'));
+        $this->withHeaders(['Authorization'=>'Bearer invalid'])->postJson('/api/v1/pos/reconciliation',['sale_ids'=>['42']])->assertUnauthorized();
+        $this->withHeaders($headers)->postJson('/api/v1/pos/reconciliation',['sale_ids'=>['42','missing']])
+            ->assertOk()->assertJsonPath('sales.42.status','paid')->assertJsonPath('sales.42.member_id',$member)
+            ->assertJsonPath('sales.missing',null);
+        $secondSecret=Str::random(64);
+        $secondConnection=DB::table('pos_connections')->insertGetId(['business_id'=>$business,'created_by'=>$owner->id,
+            'name'=>'Kasir lain','secret_hash'=>hash('sha256',$secondSecret),'active'=>true,'created_at'=>now(),'updated_at'=>now()]);
+        $this->withHeaders(['Authorization'=>'Bearer '.$secondConnection.'.'.$secondSecret])
+            ->postJson('/api/v1/pos/reconciliation',['sale_ids'=>['42']])->assertOk()->assertJsonPath('sales.42',null);
         $this->withHeaders($headers)->postJson('/api/v1/pos/sales/42/refund',['reason'=>'Barang dikembalikan'])->assertOk();
         $this->withHeaders($headers)->postJson('/api/v1/pos/sales/42/refund',['reason'=>'Barang dikembalikan'])->assertOk();
         $this->assertSame(0,DB::table('members')->where('id',$member)->value('point_balance'));
+        $this->withHeaders($headers)->postJson('/api/v1/pos/reconciliation',['sale_ids'=>['42']])
+            ->assertJsonPath('sales.42.status','refunded');
     }
 }

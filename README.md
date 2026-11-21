@@ -45,6 +45,8 @@ Untuk pengembangan lokal, `MEMBER_OTP_DRIVER=log` menulis kode ke `storage/logs/
 
 Integrasi POS eksternal tersedia untuk pencarian member, pencatatan perolehan poin dari penjualan lunas, reservasi dan konfirmasi penukaran poin, serta pembalikan poin setelah refund penuh. Owner membuat token pada halaman **Koneksi POS**. POS menyimpan ID penjualan stabil dan mengirim ulang dengan kunci yang sama; Tanda menolak isi transaksi yang berbeda untuk ID yang telah dipakai.
 
+Qazir dapat memeriksa kesesuaian transaksi melalui endpoint token `POST /api/v1/pos/reconciliation`. Tanda mengembalikan transaksi dan reservasi yang terhubung pada token POS tersebut, maksimal 100 ID per permintaan. Pemeriksaan dan riwayat hasil berada di halaman **Integrasi Tanda → Rekonsiliasi poin** pada Qazir, karena Qazir juga mengetahui penjualan yang belum pernah diterima Tanda.
+
 
 Pembayaran pada checkout Tanda dikonfirmasi manual oleh kasir. Persetujuan penukaran besar dilakukan dengan masuk sebagai manajer/owner. Pengiriman WhatsApp portal memerlukan konfigurasi provider; diskon membership dan ekspor laporan masih tahap berikutnya sesuai PRD. Seluruh nominal memakai integer rupiah.
 
