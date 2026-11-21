@@ -3,6 +3,16 @@
 use App\Http\Controllers\LoyaltyController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PosConnectionController;
+use App\Http\Controllers\MemberPortalController;
+
+Route::prefix('portal/{business}')->whereNumber('business')->name('portal.')->group(function () {
+    Route::get('/', [MemberPortalController::class, 'login'])->name('login');
+    Route::post('/code', [MemberPortalController::class, 'sendCode'])->name('code');
+    Route::get('/verify', [MemberPortalController::class, 'verify'])->name('verify');
+    Route::post('/verify', [MemberPortalController::class, 'confirm'])->name('confirm');
+    Route::get('/home', [MemberPortalController::class, 'home'])->name('home');
+    Route::post('/logout', [MemberPortalController::class, 'logout'])->name('logout');
+});
 
 Route::get('/login', [LoyaltyController::class, 'login'])->name('login');
 Route::post('/login', [LoyaltyController::class, 'authenticate'])->middleware('throttle:5,1');

@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    'member_otp' => [
+        'driver' => env('MEMBER_OTP_DRIVER', 'log'),
+        'whatsapp' => [
+            'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+            'version' => env('WHATSAPP_GRAPH_VERSION', 'v27.0'),
+            'token' => env('WHATSAPP_ACCESS_TOKEN'),
+            'template' => env('WHATSAPP_OTP_TEMPLATE'),
+            'language' => env('WHATSAPP_OTP_LANGUAGE', 'id'),
+        ],
+    ],
+
 ];

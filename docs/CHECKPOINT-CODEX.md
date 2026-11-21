@@ -78,5 +78,6 @@ Pembaruan refund QRIS 21 November 2026: dari detail penjualan POS, pengguna beri
 ## Catatan teknis
 
 - Stack yang diminta pengguna: Laravel + MySQL + Tailwind CSS + Alpine.js.
-- Sebagian fitur PRD masih tahap lanjutan, termasuk portal pelanggan OTP, WhatsApp, integrasi payment gateway/POS eksternal, dan ekspor laporan.
+- Portal member tersedia melalui `/portal/{id_bisnis}` dengan OTP sekali pakai, saldo, poin terdekat kedaluwarsa, dan riwayat ledger. Driver lokal mencatat OTP ke log hanya di lingkungan `local`/`testing`; produksi perlu WhatsApp Cloud API dan template authentication yang disetujui. Migrasi `2026_11_21_000002_create_member_login_codes` telah diterapkan ke database lokal.
+- Sebagian fitur PRD masih tahap lanjutan, termasuk konfigurasi pengiriman WhatsApp nyata, payment gateway pada checkout Tanda, dan ekspor laporan.
 - Detail setup dan batas implementasi ada di `README.md`.
