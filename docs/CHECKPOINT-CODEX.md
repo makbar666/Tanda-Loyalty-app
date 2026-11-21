@@ -29,7 +29,7 @@ Fitur inti Tanda yang sudah diimplementasikan:
 
 - Aplikasi terakhir dijalankan di `http://127.0.0.1:8000`.
 - Login owner lokal: `owner@tanda.local`.
-- Kata sandi owner sesi sebelumnya: `Tanda-e9896cebe5d345b9ba`. Jika tidak berlaku, buat ulang akun atau reset kata sandi melalui Laravel.
+- Kata sandi owner lokal tidak disimpan di dokumen. Reset melalui akun owner bila diperlukan.
 - Scheduler expiry dijalankan terpisah dengan `php artisan schedule:work`.
 - Database runtime terakhir memakai SQLite agar aplikasi bisa dijalankan. File databasenya `database/database.sqlite`.
 - Build frontend sudah dibuat di `public/build`.
